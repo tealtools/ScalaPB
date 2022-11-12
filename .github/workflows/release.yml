@@ -26,31 +26,31 @@ jobs:
     - uses: actions/setup-node@v1
       with:
         node-version: '12.x'
-    - uses: olafurpg/setup-gpg@v3
-      if: startsWith(github.ref, 'refs/tags/v')
-    - name: Publish ${{ github.ref }}
-      run: sbt ci-release
-      env:
-        JAVA_OPTS: -Xmx4G -XX:+UseG1GC
-        JVM_OPTS:  -Xmx4G -XX:+UseG1GC
-        PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
-        PGP_SECRET: ${{ secrets.PGP_SECRET }}
-        SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-        SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-    - name: Update docs
-      run: |
-        git config --global user.name "ScalaPB Docs"
-        git config --global user.email "scalapb-updater@users.noreply.github.com"
-        eval "$(ssh-agent -s)"
-        echo "$TOKEN" | ssh-add -
-        sbt docs/mdoc docs/unidoc
-        cd website
-        yarn install
-        yarn deploy
-      env:
-          TOKEN: ${{secrets.DEPLOY_KEY}}
-          USE_SSH: true
-          GIT_USER: git
+    # - uses: olafurpg/setup-gpg@v3
+    #   if: startsWith(github.ref, 'refs/tags/v')
+    # - name: Publish ${{ github.ref }}
+    #   run: sbt ci-release
+    #   env:
+    #     JAVA_OPTS: -Xmx4G -XX:+UseG1GC
+    #     JVM_OPTS:  -Xmx4G -XX:+UseG1GC
+    #     PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
+    #     PGP_SECRET: ${{ secrets.PGP_SECRET }}
+    #     SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+    #     SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+    # - name: Update docs
+    #   run: |
+    #     git config --global user.name "ScalaPB Docs"
+    #     git config --global user.email "scalapb-updater@users.noreply.github.com"
+    #     eval "$(ssh-agent -s)"
+    #     echo "$TOKEN" | ssh-add -
+    #     sbt docs/mdoc docs/unidoc
+    #     cd website
+    #     yarn install
+    #     yarn deploy
+    #   env:
+    #       TOKEN: ${{secrets.DEPLOY_KEY}}
+    #       USE_SSH: true
+    #       GIT_USER: git
 
   scalapbc:
     runs-on: ubuntu-latest
@@ -72,18 +72,20 @@ jobs:
     strategy:
       matrix:
         include:
-        - os: ubuntu-latest
+        - runs-on: ubuntu-latest
           arch: linux-x86_64
-        - os: macos-10.15
+        - runs-on: [linux, ARM64]
+          arch: linux-arm64
+        - runs-on: macos-10.15
           arch: osx-x86_64
-    runs-on: ${{matrix.os}}
+    runs-on: ${{matrix.runs-on}}
     steps:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 0
-    - uses: olafurpg/setup-scala@v10
+    - uses: olafurpg/setup-scala@v13
       with:
-        java-version: graalvm@20.1
+        java-version: graalvm-ce-java11@21.1.0
     - name: Asset name
       id: vars
       run: |
